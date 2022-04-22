@@ -60,3 +60,5 @@ CMakeLists.txt
 
 #Save files
 *.dat*
+
+/build
