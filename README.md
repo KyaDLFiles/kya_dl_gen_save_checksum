@@ -9,4 +9,4 @@ The --verbose makes the program print the calculated checksums
 # Documentation
 https://kyadlfiles.github.io/technical/#save_header
 
-GIGANTIC thanks to cherry from Discord for helping with this!
+GIGANTIC thanks to [avail](https://github.com/avail) (_cherry_ on Discord) for helping with this!

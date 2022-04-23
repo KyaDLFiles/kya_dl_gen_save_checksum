@@ -66,12 +66,12 @@ int main(int argc, char *argv[]) {
     FILE * fp;
     uint8_t *buf, four_bytes[4];
     int i;
-    _Bool verbose = 0;
+    _Bool verbose = 0, may12 = 0;
 
     //Check file path argument
     if (argc < 2) {
         printf("Missing argument!\n"
-               "Usage: gensavecsum(.exe) /path/to/save/file.dat <--verbose>\n");
+               "Usage: gensavecsum(.exe) /path/to/save/file.dat <--verbose> <--may12>\n");
         return 1;
     }
 
@@ -79,6 +79,8 @@ int main(int argc, char *argv[]) {
         for (i = 2; i < argc; i++) {
             if (strcmp("--verbose", argv[i]) == 0)
                 verbose = 1;
+            else if (strcmp("--may12", argv[i]) == 0)
+                may12 = 1;
         }
     }
 
@@ -87,7 +89,6 @@ int main(int argc, char *argv[]) {
         printf("Error opening file!\n");
         return 2;
     }
-
 
     //Read header size
     //(idk why the size is saved as it's always 0x1C, but just to be safe)
