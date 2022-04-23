@@ -1,24 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include <string.h>
 #include "crc32.h"
 
-void int32_to_bytes_BE(unsigned __int8 *array, unsigned __int32 num) { //https://stackoverflow.com/a/3784478
+void int32_to_bytes_BE(uint8_t *array, uint32_t num) { //https://stackoverflow.com/a/3784478
     array[0] = (num >> 24) & 0xFF;
     array[1] = (num >> 16) & 0xFF;
     array[2] = (num >> 8) & 0xFF;
     array[3] = num & 0xFF;
 }
 
-void int32_to_bytes_le(unsigned __int8 *array, unsigned __int32 num) {
+void int32_to_bytes_le(uint8_t *array, uint32_t num) {
     array[3] = (num >> 24) & 0xFF;
     array[2] = (num >> 16) & 0xFF;
     array[1] = (num >> 8) & 0xFF;
     array[0] = num & 0xFF;
 }
 
-unsigned __int32 bytes_le_to_int32(const unsigned __int8 array[], int size) {
-    unsigned int res = 0, mult = 1, i;
+uint32_t bytes_le_to_int32(const uint8_t array[], int size) {
+    int res = 0, mult = 1, i;
     for (i = 0; i < size; i++) {
         res += array[i] * mult;
         mult *= 256;
@@ -26,29 +27,30 @@ unsigned __int32 bytes_le_to_int32(const unsigned __int8 array[], int size) {
     return res;
 }
 
-void print_buf(unsigned __int8 *buffer, int size) {
+void print_buf(uint8_t *buffer, int size) {
     int i;
+    _Bool verbose = 0;
     for (i = 0; i < size; i++) {
         if (i > 0) printf(":");
             printf("%02X", buffer[i]);
     }
 }
 
-unsigned __int64 compute_checksum(const void *buffer, __int64 size) {
-    unsigned __int64 result;
-    __int64 v4;
-    unsigned __int8 v5;
-    __int64 v6;
+uint64_t compute_checksum(const void *buffer, int64_t size) {
+    uint64_t result;
+    int64_t v4;
+    uint8_t v5;
+    int64_t v6;
 
     result = 0xFFFFFFFFFFFFFFFFLL;
     v4 = (int)size - 1;
     if (size) {
         do {
-            v5 = *(unsigned __int8 *)buffer;
+            v5 = *(uint8_t *)buffer;
             v6 = v4;
-            v4 = (__int32)v4 - 1;
-            buffer = (unsigned __int8 *)buffer + 1;
-            result = ((unsigned __int32)result >> 8) ^ (unsigned __int64)crc32_tab[(unsigned __int8)(result ^ v5)];
+            v4 = (int32_t)v4 - 1;
+            buffer = (uint8_t *)buffer + 1;
+            result = ((uint32_t)result >> 8) ^ (uint64_t)crc32_tab[(uint8_t)(result ^ v5)];
         } while ( v6 );
     }
     return result;
@@ -57,18 +59,27 @@ unsigned __int64 compute_checksum(const void *buffer, __int64 size) {
 int main(int argc, char *argv[]) {
     //Variable definitions
     struct {
-        unsigned __int32 header_csum, header_size,
+        uint32_t header_csum, header_size,
                 data1_csum, data1_size,
                 data2_csum, data2_size;
     } header;
     FILE * fp;
-    unsigned __int8 *buf, four_bytes[4];
+    uint8_t *buf, four_bytes[4];
+    int i;
+    _Bool verbose = 0;
 
     //Check file path argument
     if (argc < 2) {
         printf("Missing argument!\n"
-               "Usage: gensavehash(.exe) /path/to/save/file.dat\n");
+               "Usage: gensavecsum(.exe) /path/to/save/file.dat <--verbose>\n");
         return 1;
+    }
+
+    if (argc > 2) {
+        for (i = 2; i < argc; i++) {
+            if (strcmp("--verbose", argv[i]) == 0)
+                verbose = 1;
+        }
     }
 
     //Open file
@@ -99,7 +110,7 @@ int main(int argc, char *argv[]) {
     if (header.data1_size == 0)
         header.data1_csum = 0;
     else {
-        buf = (unsigned __int8*)malloc(header.data1_size);
+        buf = (uint8_t*)malloc(header.data1_size);
         fread(buf, header.data1_size, 1, fp);
         header.data1_csum = compute_checksum(buf, header.data1_size);
         free(buf);
@@ -109,7 +120,7 @@ int main(int argc, char *argv[]) {
     if (header.data2_size == 0)
         header.data2_csum = 0;
     else {
-        buf = (unsigned __int8*)malloc(header.data2_size);
+        buf = (uint8_t*)malloc(header.data2_size);
         fread(buf, header.data2_size, 1, fp);
         header.data2_csum = compute_checksum(buf, header.data2_size);
         free(buf);
@@ -127,7 +138,7 @@ int main(int argc, char *argv[]) {
 
     //Reread header from file
     fseek(fp, 8, SEEK_SET);
-    buf = (unsigned __int8*)malloc(header.header_size - 8);
+    buf = (uint8_t*)malloc(header.header_size - 8);
     fread(buf, header.header_size - 8, 1, fp);
 
     //Calculate header checksum
@@ -137,17 +148,19 @@ int main(int argc, char *argv[]) {
     fwrite(four_bytes, 4, 1, fp);
 
     //Print checksums to console
-    int32_to_bytes_BE(four_bytes, header.header_csum);
-    printf("Header checksum: ");
-    print_buf(four_bytes, 4);
-    int32_to_bytes_BE(four_bytes, header.data1_csum);
-    printf("\nFirst data block checksum: ");
-    print_buf(four_bytes, 4);
-    int32_to_bytes_BE(four_bytes, header.data2_size);
-    printf("\nSecond data block checksum: ");
-    print_buf(four_bytes, 4);
-    printf("\nKeep in mind they're saved as little endian in the save file!");
-
+    if (verbose) {
+        int32_to_bytes_BE(four_bytes, header.header_csum);
+        printf("Header checksum: ");
+        print_buf(four_bytes, 4);
+        int32_to_bytes_BE(four_bytes, header.data1_csum);
+        printf("\nFirst data block checksum: ");
+        print_buf(four_bytes, 4);
+        int32_to_bytes_BE(four_bytes, header.data2_size);
+        printf("\nSecond data block checksum: ");
+        print_buf(four_bytes, 4);
+        printf("\nKeep in mind they're saved as little endian in the save file!");
+    }
+    
     //Close file and exit
     fclose(fp);
     return 0;
