@@ -8,15 +8,13 @@ The [May 12 prototype](https://hiddenpalace.org/Kya:\_Dark\_Lineage\_\(May\_12,\
 gensavecsum(.exe) /path/to/save/file.dat <--verbose>  
 The checksums stored in the file will be fixed  
 --verbose makes the program print the calculated checksums and data block sizes  
-
-# Documentation
-https://kyadlfiles.github.io/technical/#save_header
-
-#Return codes
 ## Return codes
 *0: ran succesfully*  
 *1: error opening file*  
 *2: missing argument*  
-*5: invalid argument(s)*  
+*5: invalid argument(s)* 
+
+# Documentation
+https://kyadlfiles.github.io/technical/#save_header 
 
 GIGANTIC thanks to [avail](https://github.com/avail) (_cherry_ on Discord) for helping with this!
