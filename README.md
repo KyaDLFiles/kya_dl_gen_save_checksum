@@ -7,7 +7,7 @@ The [May 12 prototype](https://hiddenpalace.org/Kya:\_Dark\_Lineage\_\(May\_12,\
 # Usage
 gensavecsum(.exe) /path/to/save/file.dat <--verbose>
 The checksums stored in the file will be fixed
-The --verbose makes the program print the calculated checksums
+--verbose makes the program print the calculated checksums and data block sizes
 
 # Documentation
 https://kyadlfiles.github.io/technical/#save_header

@@ -27,11 +27,10 @@ uint32_t bytes_le_to_int32(const uint8_t array[], int size) {
     return res;
 }
 
-void print_buf(uint8_t *buffer, int size) {
+void print_buf(uint8_t *buffer, int size, char separator[]) {
     int i;
-    _Bool verbose = 0;
     for (i = 0; i < size; i++) {
-        if (i > 0) printf(":");
+        if (i > 0) printf("%s", separator);
             printf("%02X", buffer[i]);
     }
 }
@@ -70,27 +69,31 @@ int main(int argc, char *argv[]) {
 
     //Check file path argument
     if (argc < 2) {
-        printf("Missing argument!\n"
+        fprintf(stderr,"Missing argument!\n"
                "Usage: gensavecsum(.exe) /path/to/save/file.dat <--verbose>\n");
-        return 1;
+        return 2;
     }
 
     if (argc > 2) {
-        for (i = 2; i < argc; i++) {
+        for (i = 2; i < argc; i++) { //not really useful now, but may be later
             if (strcmp("--verbose", argv[i]) == 0)
                 verbose = 1;
+			else {
+				fprintf(stderr, "Invalid argument(s)!\n");
+				return 5;
+			}
         }
     }
 
     //Open file
     if ((fp = fopen(argv[1], "rb+")) == NULL) {
-        printf("Error opening file!\n");
-        return 2;
+        fprintf(stderr,"Error opening file!\n");
+        return 1;
     }
 
 
     //Read header size
-    //(idk why the size is saved as it's always 0x1C, but just to be safe)
+    //(really not needed for the final and sep 29 builds as it's always 1C, but could be useful for may 12)
     fseek(fp, 8, SEEK_SET);
     fread(four_bytes, 4, 1, fp);
     header.header_size = bytes_le_to_int32(four_bytes, 4);
@@ -146,19 +149,35 @@ int main(int argc, char *argv[]) {
     int32_to_bytes_le(four_bytes, header.header_csum);
     fseek(fp, 4, SEEK_SET);
     fwrite(four_bytes, 4, 1, fp);
+	free(buf);
 
     //Print checksums to console
     if (verbose) {
-        int32_to_bytes_BE(four_bytes, header.header_csum);
-        printf("Header checksum: ");
-        print_buf(four_bytes, 4);
-        int32_to_bytes_BE(four_bytes, header.data1_csum);
-        printf("\nFirst data block checksum: ");
-        print_buf(four_bytes, 4);
-        int32_to_bytes_BE(four_bytes, header.data2_size);
-        printf("\nSecond data block checksum: ");
-        print_buf(four_bytes, 4);
-        printf("\nKeep in mind they're saved as little endian in the save file!");
+		printf("Header size: h");
+		int32_to_bytes_BE(four_bytes, header.header_size);
+		print_buf(four_bytes, 4, "");
+
+	    printf("\nFirst data block size: h");
+	    int32_to_bytes_BE(four_bytes, header.data1_size);
+	    print_buf(four_bytes, 4, "");
+
+		printf("\nSecond data block size: h");
+	    int32_to_bytes_BE(four_bytes, header.data2_size);
+	    print_buf(four_bytes, 4, "");
+
+	    int32_to_bytes_BE(four_bytes, header.header_csum);
+	    printf("\n\nHeader checksum: h(");
+        print_buf(four_bytes, 4, ":");
+
+		int32_to_bytes_BE(four_bytes, header.data1_csum);
+        printf(")\nFirst data block checksum: h(");
+        print_buf(four_bytes, 4, ":");
+
+		int32_to_bytes_BE(four_bytes, header.data2_size);
+        printf(")\nSecond data block checksum: h(");
+        print_buf(four_bytes, 4, ":");
+
+		printf(")\n\nKeep in mind they're saved as little endian in the save file!");
     }
     
     //Close file and exit
