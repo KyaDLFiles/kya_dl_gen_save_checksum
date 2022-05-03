@@ -12,6 +12,8 @@ The checksums stored in the file will be fixed
 *0: ran succesfully*  
 *1: error opening file*  
 *2: missing argument*  
+*3: file isn't a KDL save file*  
+*4: bad file header, invalid section size value(s) (program has tried to read out of bounds)*  
 *5: invalid argument(s)* 
 
 # Documentation

@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 				data2_csum, data2_size;
 	} header;
 	FILE * fp;
-	uint8_t *buf, four_bytes[4];
+	uint8_t *buf, four_bytes[4], NEDE[4] = {0x4e, 0x45, 0x44, 0x45};
 	int i;
 	_Bool verbose = 0;
 
@@ -91,6 +91,13 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	//Check if NEDE is present at the begiining of the file, if not quit
+	fread(four_bytes, 4, 1, fp);
+	if (memcmp(four_bytes, NEDE, 4)) {
+		fprintf(stderr, "The file is not a KDL save file. Aborting!\n");
+		fclose(fp);
+		return 3;
+	}
 
 	//Read header size
 	//(really not needed for the final and sep 29 builds as it's always 1C, but could be useful for may 12)
@@ -127,6 +134,12 @@ int main(int argc, char *argv[]) {
 		fread(buf, header.data2_size, 1, fp);
 		header.data2_csum = compute_checksum(buf, header.data2_size);
 		free(buf);
+	}
+
+	if (feof(fp)) {
+		fprintf(stderr, "Invalid section size(s) in header! Save file may be damaged\n");
+		fclose(fp);
+		return 4;
 	}
 
 	//Write first data section checksum to file
