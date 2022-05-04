@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	//Check if NEDE is present at the begiining of the file, if not quit
+	//Check if NEDE is present at the beginning of the file, if not quit
 	fread(four_bytes, 4, 1, fp);
 	if (memcmp(four_bytes, NEDE, 4)) {
 		fprintf(stderr, "The file is not a KDL save file. Aborting!\n");
