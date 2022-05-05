@@ -37,20 +37,16 @@ void print_buf(uint8_t *buffer, int size, char separator[]) {
 
 uint64_t compute_checksum(const void *buffer, int64_t size) {
 	uint64_t result;
-	int64_t v4;
-	uint8_t v5;
-	int64_t v6;
+	int64_t remaining = (int)size - 1, flag;
 
 	result = 0xFFFFFFFFFFFFFFFFLL;
-	v4 = (int)size - 1;
 	if (size) {
 		do {
-			v5 = *(uint8_t *)buffer;
-			v6 = v4;
-			v4 = (int32_t)v4 - 1;
+			flag = remaining;
+			remaining = (int32_t)remaining - 1;
+			result = ((uint32_t)result >> 8) ^ (uint64_t)crc32_tab[(uint8_t)(result ^ *(uint8_t *)buffer)];
 			buffer = (uint8_t *)buffer + 1;
-			result = ((uint32_t)result >> 8) ^ (uint64_t)crc32_tab[(uint8_t)(result ^ v5)];
-		} while ( v6 );
+		} while ( flag );
 	}
 	return result;
 }
@@ -186,7 +182,7 @@ int main(int argc, char *argv[]) {
 		printf(")\nFirst data block checksum: h(");
 		print_buf(four_bytes, 4, ":");
 
-		int32_to_bytes_BE(four_bytes, header.data2_size);
+		int32_to_bytes_BE(four_bytes, header.data2_csum);
 		printf(")\nSecond data block checksum: h(");
 		print_buf(four_bytes, 4, ":");
 
